@@ -90,7 +90,9 @@ jobs:
           node-version: "22"
 
       - name: Build Tailwind stylesheet
-        run: npx --yes @tailwindcss/cli@4.3.3 -i frontend/src/input.css -o frontend/src/assets/tailwind.css --minify
+        run: |
+          npm install --no-save --no-package-lock tailwindcss@4.3.3 @tailwindcss/cli@4.3.3
+          npx @tailwindcss/cli -i frontend/src/input.css -o frontend/src/assets/tailwind.css --minify
 
       - name: Bundle
         env:
