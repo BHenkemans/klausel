@@ -6,7 +6,7 @@ The source lives in the private repository `BHenkemans/automating-reasoning`. Pu
 
 ## Setup
 
-1. **Deploy key so this repo can read the source.** Run `ssh-keygen -t ed25519 -N "" -C klausel-ci -f klausel_deploy`. Add `klausel_deploy.pub` to `automating-reasoning` → Settings → Deploy keys, read-only. Add the private half `klausel_deploy` to this repo → Settings → Secrets → Actions as `SOURCE_DEPLOY_KEY`. Delete both files afterwards.
+1. **Token so this repo can read the source.** Create a fine-grained personal access token for repository `BHenkemans/automating-reasoning` only, with permission *Contents: Read-only*. Store it in this repo → Settings → Secrets → Actions as `SOURCE_TOKEN`. An SSH deploy key doesn't work here: the Windows ARM runner leaves the key file readable by other users, and SSH then refuses to use it.
 2. **Token so the source repo can start a release here.** Create a fine-grained personal access token for repository `BHenkemans/klausel` only, with permission *Actions: Read and write*. Store it in `automating-reasoning` → Settings → Secrets → Actions as `KLAUSEL_RELEASE_TOKEN`.
 3. **Pages.** In this repo, go to Settings → Pages → Source and select *GitHub Actions*.
 4. **Fork pull requests.** In this repo, go to Settings → Actions → General and require approval for workflows from all outside collaborators.

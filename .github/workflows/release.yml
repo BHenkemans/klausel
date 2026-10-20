@@ -56,7 +56,7 @@ jobs:
         with:
           repository: BHenkemans/automating-reasoning
           ref: ${{ inputs.tag }}
-          ssh-key: ${{ secrets.SOURCE_DEPLOY_KEY }}
+          token: ${{ secrets.SOURCE_TOKEN }}
           persist-credentials: false
 
       - name: Install Linux system dependencies
