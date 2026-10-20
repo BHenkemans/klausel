@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag of BHenkemans/automating-reasoning to build and release
+        required: true
+
+run-name: Release ${{ inputs.tag }}
+
+env:
+  CARGO_TERM_COLOR: always
+  Z3_SYS_Z3_VERSION: "4.16.0"
+
+defaults:
+  run:
+    working-directory: Code
+
+jobs:
+  bundle:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # z3-sys links a libz3.a built against glibc 2.39 (x64) / 2.38 (arm64), so 22.04 cannot link it.
+          - name: linux-x86_64
+            os: ubuntu-24.04
+            package-types: --package-types deb
+            extension: deb
+            installer: "*.deb"
+          - name: linux-aarch64
+            os: ubuntu-24.04-arm
+            package-types: --package-types deb
+            extension: deb
+            installer: "*.deb"
+          - name: macos-x86_64
+            os: macos-15-intel
+            package-types: --package-types macos --package-types dmg
+            extension: dmg
+            installer: "*.dmg"
+          - name: macos-aarch64
+            os: macos-15
+            package-types: --package-types macos --package-types dmg
+            extension: dmg
+            installer: "*.dmg"
+          - name: windows-x86_64
+            os: windows-latest
+            package-types: --package-types nsis
+            extension: exe
+            installer: "*-setup.exe"
+          - name: windows-aarch64
+            os: windows-11-arm
+            package-types: --package-types nsis
+            extension: exe
+            installer: "*-setup.exe"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: BHenkemans/automating-reasoning
+          ref: ${{ inputs.tag }}
+          token: ${{ secrets.SOURCE_TOKEN }}
+          persist-credentials: false
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev \
+            libssl-dev \
+            pkg-config \
+            build-essential \
+            curl wget file
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: Code
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Dioxus CLI
+        run: cargo binstall -y --force dioxus-cli@0.7.10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build Tailwind stylesheet
+        run: |
+          npm install --no-save --no-package-lock tailwindcss@4.3.3 @tailwindcss/cli@4.3.3
+          npx @tailwindcss/cli -i frontend/src/input.css -o frontend/src/assets/tailwind.css --minify
+
+      # Z3's Windows release links dynamically; frontend/Dioxus.toml bundles these next to klausel.exe.
+      - name: Stage Z3 runtime DLLs
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $arch = if ($env:RUNNER_ARCH -eq 'ARM64') { 'arm64' } else { 'x64' }
+          $name = "z3-$env:Z3_SYS_Z3_VERSION-$arch-win"
+          Invoke-WebRequest "https://github.com/Z3Prover/z3/releases/download/z3-$env:Z3_SYS_Z3_VERSION/$name.zip" -OutFile z3.zip
+          Expand-Archive z3.zip -DestinationPath z3
+          New-Item -ItemType Directory windows-dlls
+          Copy-Item "z3/$name/bin/libz3.dll", "z3/$name/bin/msvcp140.dll", "z3/$name/bin/vcruntime140*.dll" windows-dlls
+
+      - name: Bundle
+        env:
+          READ_ONLY_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: dx bundle --release --platform desktop --package frontend ${{ matrix.package-types }} --out-dir dist
+
+      # The download page links to releases/latest/download/<name>, so asset names must not carry the version.
+      - name: Give the installer a stable name
+        shell: bash
+        run: |
+          shopt -s failglob
+          mkdir -p ../release
+          mv dist/${{ matrix.installer }} ../release/Klausel-${{ matrix.name }}.${{ matrix.extension }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: klausel-${{ matrix.name }}
+          path: release/*
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: Klausel ${{ inputs.tag }}
+          files: release/*
+          make_latest: true
