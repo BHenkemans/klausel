@@ -100,6 +100,18 @@ jobs:
           npm install --no-save --no-package-lock tailwindcss@4.3.3 @tailwindcss/cli@4.3.3
           npx @tailwindcss/cli -i frontend/src/input.css -o frontend/src/assets/tailwind.css --minify
 
+      # Z3's Windows release links dynamically; frontend/Dioxus.toml bundles these next to klausel.exe.
+      - name: Stage Z3 runtime DLLs
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $arch = if ($env:RUNNER_ARCH -eq 'ARM64') { 'arm64' } else { 'x64' }
+          $name = "z3-$env:Z3_SYS_Z3_VERSION-$arch-win"
+          Invoke-WebRequest "https://github.com/Z3Prover/z3/releases/download/z3-$env:Z3_SYS_Z3_VERSION/$name.zip" -OutFile z3.zip
+          Expand-Archive z3.zip -DestinationPath z3
+          New-Item -ItemType Directory windows-dlls
+          Copy-Item "z3/$name/bin/libz3.dll", "z3/$name/bin/msvcp140.dll", "z3/$name/bin/vcruntime140*.dll" windows-dlls
+
       - name: Bundle
         env:
           READ_ONLY_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
