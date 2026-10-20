@@ -30,26 +30,32 @@ jobs:
             os: ubuntu-24.04
             package-types: --package-types deb
             extension: deb
+            installer: "*.deb"
           - name: linux-aarch64
             os: ubuntu-24.04-arm
             package-types: --package-types deb
             extension: deb
+            installer: "*.deb"
           - name: macos-x86_64
             os: macos-15-intel
             package-types: --package-types macos --package-types dmg
             extension: dmg
+            installer: "*.dmg"
           - name: macos-aarch64
             os: macos-15
             package-types: --package-types macos --package-types dmg
             extension: dmg
+            installer: "*.dmg"
           - name: windows-x86_64
             os: windows-latest
             package-types: --package-types nsis
             extension: exe
+            installer: "*-setup.exe"
           - name: windows-aarch64
             os: windows-11-arm
             package-types: --package-types nsis
             extension: exe
+            installer: "*-setup.exe"
 
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +111,7 @@ jobs:
         run: |
           shopt -s failglob
           mkdir -p ../release
-          mv dist/*.${{ matrix.extension }} ../release/Klausel-${{ matrix.name }}.${{ matrix.extension }}
+          mv dist/${{ matrix.installer }} ../release/Klausel-${{ matrix.name }}.${{ matrix.extension }}
 
       - uses: actions/upload-artifact@v4
         with:
