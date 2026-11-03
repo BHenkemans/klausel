@@ -1,9 +1,5 @@
 use crate::state::{ClauseSet, Lit, literals};
 
-pub fn sat_guard(s: &ClauseSet) -> bool {
-    s.is_empty()
-}
-
 pub fn unsat_guard(s: &ClauseSet) -> bool {
     s.iter().any(|c| c.is_empty())
 }

@@ -180,7 +180,7 @@ fn realise(
     use crate::algos::model_text::{parse_model_text, parse_trail_text};
     use backend::cdcl::Model;
 
-    let model = Model::from_trace(&trace, vars, clauses).with_ordered_decisions();
+    let model = Model::from_trace(&trace, vars, clauses);
     let outcome = model.solve(&trace, sat, Some(per_solve));
 
     if outcome.unknown {
