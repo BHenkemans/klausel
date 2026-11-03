@@ -1,9 +1,0 @@
-target
-**/target
-
-# Editor cruft
-.vscode
-.idea
-*.swp
-*.log
-.DS_Store
