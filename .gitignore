@@ -1,3 +1,4 @@
 target/
 frontend/src/assets/tailwind.css
 dist/
+.idea/
