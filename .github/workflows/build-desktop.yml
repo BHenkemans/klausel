@@ -1,0 +1,121 @@
+name: Build desktop app
+
+on:
+  pull_request:
+    paths:
+      - "Code/**"
+      - ".github/workflows/build-desktop.yml"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  # Pin the Z3 release that z3-sys downloads. Without this, a new upstream Z3
+  # release silently changes what every runner links against.
+  Z3_SYS_Z3_VERSION: "4.16.0"
+
+defaults:
+  run:
+    working-directory: Code
+
+jobs:
+  bundle:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # z3-sys links a libz3.a built against glibc 2.39 (x64) / 2.38 (arm64),
+          # so the runner's glibc must be at least that new. 24.04 ships 2.39;
+          # 22.04 only has 2.35 and will fail to link.
+          - name: linux-x86_64
+            os: ubuntu-24.04
+            package-types: --package-types deb
+            artifacts: Code/dist/*.deb
+          - name: linux-aarch64
+            os: ubuntu-24.04-arm
+            package-types: --package-types deb
+            artifacts: Code/dist/*.deb
+          - name: macos-x86_64
+            os: macos-15-intel
+            package-types: --package-types macos --package-types dmg
+            artifacts: Code/dist/*.dmg
+          - name: macos-aarch64
+            os: macos-15
+            package-types: --package-types macos --package-types dmg
+            artifacts: Code/dist/*.dmg
+          - name: windows-x86_64
+            os: windows-latest
+            package-types: --package-types nsis
+            artifacts: Code/dist/*-setup.exe
+          - name: windows-aarch64
+            os: windows-11-arm
+            package-types: --package-types nsis
+            artifacts: Code/dist/*-setup.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # wry/tao need the system WebView and GTK. libssl-dev is for the reqwest
+      # inside z3-sys's build script, which fetches the Z3 release archive.
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev \
+            libssl-dev \
+            pkg-config \
+            build-essential \
+            curl wget file
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: Code
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Dioxus CLI
+        run: cargo binstall -y --force dioxus-cli@0.7.10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # frontend/src/assets/tailwind.css is gitignored, and main.rs resolves it
+      # through asset!() at compile time — without this step the build fails.
+      - name: Build Tailwind stylesheet
+        run: |
+          npm install --no-save --no-package-lock tailwindcss@4.3.3 @tailwindcss/cli@4.3.3
+          npx @tailwindcss/cli -i frontend/src/input.css -o frontend/src/assets/tailwind.css --minify
+
+      # Bundled next to klausel.exe through `resources` in frontend/Dioxus.toml.
+      - name: Stage Z3 runtime DLLs
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $arch = if ($env:RUNNER_ARCH -eq 'ARM64') { 'arm64' } else { 'x64' }
+          $name = "z3-$env:Z3_SYS_Z3_VERSION-$arch-win"
+          Invoke-WebRequest "https://github.com/Z3Prover/z3/releases/download/z3-$env:Z3_SYS_Z3_VERSION/$name.zip" -OutFile z3.zip
+          Expand-Archive z3.zip -DestinationPath z3
+          New-Item -ItemType Directory windows-dlls
+          Copy-Item "z3/$name/bin/libz3.dll", "z3/$name/bin/msvcp140.dll", "z3/$name/bin/vcruntime140*.dll" windows-dlls
+
+      - name: Bundle
+        env:
+          # z3-sys queries the GitHub API for the Z3 release asset. Anonymous
+          # calls are rate-limited per IP, and CI runners share addresses.
+          READ_ONLY_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: dx bundle --release --platform desktop --package frontend ${{ matrix.package-types }} --out-dir dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: klausel-${{ matrix.name }}
+          path: ${{ matrix.artifacts }}
+          if-no-files-found: error
