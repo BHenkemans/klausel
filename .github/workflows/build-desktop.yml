@@ -3,7 +3,10 @@ name: Build desktop app
 on:
   pull_request:
     paths:
-      - "Code/**"
+      - "backend/**"
+      - "frontend/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
       - ".github/workflows/build-desktop.yml"
   workflow_dispatch:
 
@@ -12,10 +15,6 @@ env:
   # Pin the Z3 release that z3-sys downloads. Without this, a new upstream Z3
   # release silently changes what every runner links against.
   Z3_SYS_Z3_VERSION: "4.16.0"
-
-defaults:
-  run:
-    working-directory: Code
 
 jobs:
   bundle:
@@ -31,27 +30,27 @@ jobs:
           - name: linux-x86_64
             os: ubuntu-24.04
             package-types: --package-types deb
-            artifacts: Code/dist/*.deb
+            artifacts: dist/*.deb
           - name: linux-aarch64
             os: ubuntu-24.04-arm
             package-types: --package-types deb
-            artifacts: Code/dist/*.deb
+            artifacts: dist/*.deb
           - name: macos-x86_64
             os: macos-15-intel
             package-types: --package-types macos --package-types dmg
-            artifacts: Code/dist/*.dmg
+            artifacts: dist/*.dmg
           - name: macos-aarch64
             os: macos-15
             package-types: --package-types macos --package-types dmg
-            artifacts: Code/dist/*.dmg
+            artifacts: dist/*.dmg
           - name: windows-x86_64
             os: windows-latest
             package-types: --package-types nsis
-            artifacts: Code/dist/*-setup.exe
+            artifacts: dist/*-setup.exe
           - name: windows-aarch64
             os: windows-11-arm
             package-types: --package-types nsis
-            artifacts: Code/dist/*-setup.exe
+            artifacts: dist/*-setup.exe
 
     steps:
       - uses: actions/checkout@v4
@@ -76,8 +75,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: Code
 
       - uses: cargo-bins/cargo-binstall@main
 

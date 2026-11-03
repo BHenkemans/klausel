@@ -1,21 +1,21 @@
 name: Release
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag of BHenkemans/automating-reasoning to build and release
+        description: Existing tag to rebuild and release
         required: true
 
-run-name: Release ${{ inputs.tag }}
+run-name: Release ${{ inputs.tag || github.ref_name }}
 
 env:
   CARGO_TERM_COLOR: always
   Z3_SYS_Z3_VERSION: "4.16.0"
-
-defaults:
-  run:
-    working-directory: Code
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   bundle:
@@ -60,10 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: BHenkemans/automating-reasoning
-          ref: ${{ inputs.tag }}
-          token: ${{ secrets.SOURCE_TOKEN }}
-          persist-credentials: false
+          ref: ${{ env.TAG }}
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -83,8 +80,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: Code
 
       - uses: cargo-bins/cargo-binstall@main
 
@@ -122,8 +117,8 @@ jobs:
         shell: bash
         run: |
           shopt -s failglob
-          mkdir -p ../release
-          mv dist/${{ matrix.installer }} ../release/Klausel-${{ matrix.name }}.${{ matrix.extension }}
+          mkdir -p release
+          mv dist/${{ matrix.installer }} release/Klausel-${{ matrix.name }}.${{ matrix.extension }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -145,7 +140,7 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag }}
-          name: Klausel ${{ inputs.tag }}
+          tag_name: ${{ env.TAG }}
+          name: Klausel ${{ env.TAG }}
           files: release/*
           make_latest: true
