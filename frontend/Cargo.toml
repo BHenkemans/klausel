@@ -1,0 +1,29 @@
+[package]
+name = "frontend"
+version = "0.1.0"
+edition = "2024"
+
+# `dx` names the bundled app after the binary target, PascalCased, so this is
+# what makes the desktop build "Klausel.app" rather than "Frontend.app".
+[[bin]]
+name = "klausel"
+path = "src/main.rs"
+
+[dependencies]
+dioxus = { version = "0.7.10", features = ["fullstack"] }
+serde = { version = "1", features = ["derive"] }
+backend = { path = "../backend", optional = true }
+# Z3 solving blocks; the api layer hands it to `spawn_blocking` so it never
+# occupies the async executor. On desktop that executor drives the UI.
+tokio = { version = "1", features = ["rt"], optional = true }
+rand = { version = "0.9", optional = true }
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+server = ["dioxus/server", "dep:backend", "dep:tokio", "dep:rand"]
+# One self-contained binary: `dioxus/desktop` renders in the system WebView, and
+# enabling this crate's own `server` feature makes the `#[server]` macro expand
+# to a direct call of the function body rather than an HTTP request -- so the
+# backend is linked in and no server process is involved.
+desktop = ["dioxus/desktop", "server"]

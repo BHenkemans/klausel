@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Cambria Math", "Latin Modern Math", Cambria, "Times New Roman", serif;
+
+  --spacing-topbar: 3.75rem;
+
+  --color-page-bg: var(--page-bg);
+  --color-panel-bg: var(--panel-bg);
+  --color-topbar: var(--topbar);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-unit-bg: var(--unit-bg);
+  --color-unit-ink: var(--unit-ink);
+  --color-pure-bg: var(--pure-bg);
+  --color-pure-ink: var(--pure-ink);
+  --color-elim-bg: var(--elim-bg);
+  --color-elim-ink: var(--elim-ink);
+
+  --color-ok-ink: var(--ok-ink);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-bg: var(--warn-bg);
+  --color-err-ink: var(--err-ink);
+  --color-err-bg: var(--err-bg);
+  --color-err-border: var(--err-border);
+}
+
+:root {
+  --page-bg:     var(--color-stone-50);
+  --panel-bg:    var(--color-stone-50);
+  --topbar:      var(--color-white);
+  --surface:     var(--color-white);
+  --surface-2:   var(--color-stone-100);
+  --border:      var(--color-stone-200);
+  --border-soft: var(--color-stone-100);
+
+  --ink:         var(--color-stone-800);
+  --ink-2:       var(--color-stone-700);
+  --ink-muted:   var(--color-stone-500);
+  --ink-faint:   var(--color-stone-400);
+
+  --accent:      var(--color-emerald-600);
+  --accent-soft: var(--color-emerald-50);
+
+  --unit-bg:     var(--color-sky-100);
+  --unit-ink:    var(--color-sky-700);
+  --pure-bg:     var(--color-violet-100);
+  --pure-ink:    var(--color-violet-700);
+  --elim-bg:     var(--color-amber-100);
+  --elim-ink:    var(--color-amber-700);
+
+  --ok-bg:       var(--color-emerald-50);
+  --ok-ink:      var(--color-emerald-700);
+  --warn-bg:     var(--color-amber-50);
+  --warn-ink:    var(--color-amber-700);
+  --err-bg:      var(--color-red-50);
+  --err-ink:     var(--color-red-700);
+  --err-border:  var(--color-red-200);
+}
+
+.dark {
+  --page-bg:     var(--color-stone-900);
+  --panel-bg:    var(--color-stone-900);
+  --topbar:      var(--color-stone-800);
+  --surface:     var(--color-stone-800);
+  --surface-2:   var(--color-stone-700);
+  --border:      var(--color-stone-700);
+  --border-soft: var(--color-stone-800);
+
+  --ink:         var(--color-stone-100);
+  --ink-2:       var(--color-stone-300);
+  --ink-muted:   var(--color-stone-400);
+  --ink-faint:   var(--color-stone-500);
+
+  --accent:      var(--color-emerald-400);
+  --accent-soft: var(--color-emerald-900);
+
+  --unit-bg:     var(--color-sky-900);
+  --unit-ink:    var(--color-sky-200);
+  --pure-bg:     var(--color-violet-900);
+  --pure-ink:    var(--color-violet-200);
+  --elim-bg:     var(--color-amber-900);
+  --elim-ink:    var(--color-amber-200);
+
+  --ok-bg:       var(--color-emerald-900);
+  --ok-ink:      var(--color-emerald-200);
+  --warn-bg:     var(--color-amber-900);
+  --warn-ink:    var(--color-amber-200);
+  --err-bg:      var(--color-red-900);
+  --err-ink:     var(--color-red-200);
+  --err-border:  var(--color-red-700);
+}
+
+html, body {
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body { transition: background .25s; }

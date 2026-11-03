@@ -1,0 +1,43 @@
+[application]
+name = "Klausel"
+
+[web.app]
+title = "Klausel"
+
+# `identifier` and `publisher` are both required by `dx bundle`; the rest is
+# metadata the .dmg / .deb / installer carries.
+[bundle]
+identifier = "eu.henkemans.klausel"
+publisher = "Bartjan Henkemans"
+short_description = "Generate and grade Davis-Putnam, DPLL and CDCL exercises."
+icon = [
+    "icons/32x32.png",
+    "icons/128x128.png",
+    "icons/256x256.png",
+    "icons/512x512.png",
+    "icons/icon.svg",
+    "icons/icon.icns",
+    "icons/icon.ico",
+]
+# Z3's Windows release has no static library, so the executable loads libz3.dll
+# at runtime. CI stages these from the same Z3 release z3-sys links against;
+# on other platforms they are absent and `dx` skips them with a warning.
+resources = [
+    "windows-dlls/libz3.dll",
+    "windows-dlls/msvcp140.dll",
+    "windows-dlls/vcruntime140.dll",
+    "windows-dlls/vcruntime140_1.dll",
+]
+
+[bundle.windows.nsis]
+installer_icon = "icons/icon.ico"
+
+# `dx bundle` writes no Depends line of its own, so apt would not pull in the
+# shared libraries the binary links against.
+[bundle.deb]
+depends = ["libwebkit2gtk-4.1-0", "libgtk-3-0", "libxdo3", "libssl3"]
+
+# "-" is an ad-hoc signature: no Apple account, but a sealed bundle, so macOS
+# offers "Open Anyway" for a downloaded copy instead of calling it damaged.
+[bundle.macos]
+signing_identity = "-"
