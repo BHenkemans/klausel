@@ -1,0 +1,9 @@
+# expects: vars 4 clauses 4
+decide 0
+decide 2
+decide 4
+unit 0
+conflict 1
+unit 4
+decide 2
+sat

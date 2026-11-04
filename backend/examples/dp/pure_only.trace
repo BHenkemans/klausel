@@ -1,0 +1,4 @@
+# expects: vars 3 clauses 2
+pure 0
+pure 4
+sat

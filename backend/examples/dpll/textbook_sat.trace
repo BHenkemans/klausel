@@ -1,0 +1,16 @@
+# vars 5 clauses 8
+
+decide 0
+unit 1
+decide 2
+unit 4
+backtrack 0
+unit 3
+backtrack 5
+decide 2
+unit 0
+unit 6
+backtrack 2
+decide 4
+decide 6
+sat

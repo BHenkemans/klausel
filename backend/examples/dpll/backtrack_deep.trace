@@ -1,0 +1,6 @@
+# vars 3 clauses 4
+decide 0
+decide 2
+unit 0
+backtrack 1
+sat

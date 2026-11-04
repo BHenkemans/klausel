@@ -1,0 +1,6 @@
+# expects: vars 2 clauses 4
+decide 0
+unit 0
+backtrack 1
+unit 2
+unsat

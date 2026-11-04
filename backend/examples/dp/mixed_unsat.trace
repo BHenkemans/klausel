@@ -1,0 +1,5 @@
+# expects: vars 3 clauses 5
+unit 1
+elim 1
+unit 4
+unsat
